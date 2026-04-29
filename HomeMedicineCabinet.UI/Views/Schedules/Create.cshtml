@@ -1,0 +1,67 @@
+﻿@model HomeMedicineCabinet.UI.Models.ScheduleCreateViewModel
+
+@{
+    ViewData["Title"] = "Добавить расписание";
+}
+
+<h1>Добавить расписание</h1>
+
+<form asp-action="Create" method="post">
+    <div class="mb-3">
+        <label class="form-label">Лекарство</label>
+        <select asp-for="MedicineId" class="form-control" asp-items="ViewBag.Medicines">
+            <option value="">Выберите лекарство</option>
+        </select>
+        <span asp-validation-for="MedicineId" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Доза</label>
+        <input asp-for="Dose" class="form-control" placeholder="1 таблетка, 5 мл" />
+        <span asp-validation-for="Dose" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Периодичность</label>
+        <select asp-for="FrequencyType" class="form-control">
+            <option value="Daily">Ежедневно</option>
+            <option value="EveryFewHours">Каждые несколько часов</option>
+            <option value="Weekly">Еженедельно</option>
+            <option value="AsNeeded">По необходимости</option>
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Количество приёмов в день</label>
+        <input asp-for="TimesPerDay" class="form-control" type="number" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Время приёма</label>
+        <input asp-for="IntakeTimesText" class="form-control" placeholder="08:00, 14:00, 20:00" />
+        <span asp-validation-for="IntakeTimesText" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Дата начала</label>
+        <input asp-for="StartDate" class="form-control" type="date" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Дата окончания</label>
+        <input asp-for="EndDate" class="form-control" type="date" />
+    </div>
+
+    <div class="form-check mb-3">
+        <input asp-for="IsActive" class="form-check-input" />
+        <label class="form-check-label">Активно</label>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Комментарий</label>
+        <textarea asp-for="Comment" class="form-control"></textarea>
+    </div>
+
+    <button type="submit" class="btn btn-success">Сохранить</button>
+    <a asp-action="Index" class="btn btn-secondary">Назад</a>
+</form>

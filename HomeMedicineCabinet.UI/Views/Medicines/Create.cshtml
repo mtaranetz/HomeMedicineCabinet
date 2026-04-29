@@ -1,0 +1,44 @@
+﻿@model HomeMedicineCabinet.UI.Models.MedicineCreateViewModel
+
+@{
+    ViewData["Title"] = "Добавить лекарство";
+}
+
+<h1>Добавить лекарство</h1>
+
+<form asp-action="Create" method="post">
+    <div class="mb-3">
+        <label class="form-label">Название</label>
+        <input asp-for="Name" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Категория</label>
+        <select asp-for="CategoryId" class="form-control" asp-items="ViewBag.Categories">
+            <option value="">Без категории</option>
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Форма выпуска</label>
+        <input asp-for="Form" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Дозировка</label>
+        <input asp-for="Dosage" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Производитель</label>
+        <input asp-for="Manufacturer" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Описание</label>
+        <textarea asp-for="Description" class="form-control"></textarea>
+    </div>
+
+    <button type="submit" class="btn btn-success">Сохранить</button>
+    <a asp-action="Index" class="btn btn-secondary">Назад</a>
+</form>

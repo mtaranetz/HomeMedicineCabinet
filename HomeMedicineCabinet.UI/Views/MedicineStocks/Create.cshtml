@@ -1,0 +1,41 @@
+﻿@model HomeMedicineCabinet.UI.Models.MedicineStockCreateViewModel
+
+@{
+    ViewData["Title"] = "Добавить запас";
+}
+
+<h1>Добавить запас</h1>
+
+<h4>@ViewBag.MedicineName</h4>
+
+<form asp-action="Create" method="post">
+    <input type="hidden" asp-for="MedicineId" />
+
+    <div class="mb-3">
+        <label class="form-label">Количество</label>
+        <input asp-for="Quantity" class="form-control" type="number" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Единица измерения</label>
+        <input asp-for="Unit" class="form-control" placeholder="таблеток, мл, упаковок" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Минимальный остаток</label>
+        <input asp-for="MinQuantity" class="form-control" type="number" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Срок годности</label>
+        <input asp-for="ExpirationDate" class="form-control" type="date" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Место хранения</label>
+        <input asp-for="StoragePlace" class="form-control" />
+    </div>
+
+    <button type="submit" class="btn btn-success">Сохранить</button>
+    <a asp-controller="Medicines" asp-action="Index" class="btn btn-secondary">Назад</a>
+</form>

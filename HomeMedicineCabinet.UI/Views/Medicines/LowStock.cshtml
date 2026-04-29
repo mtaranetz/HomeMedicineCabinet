@@ -1,0 +1,37 @@
+﻿@model IEnumerable<HomeMedicineCabinet.Core.Entities.MedicineStock>
+
+@{
+    ViewData["Title"] = "Низкие запасы";
+}
+
+<h1>Низкие запасы лекарств</h1>
+
+<a asp-action="Index" class="btn btn-secondary mb-3">Назад к аптечке</a>
+
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>Лекарство</th>
+            <th>Категория</th>
+            <th>Остаток</th>
+            <th>Минимум</th>
+            <th>Место хранения</th>
+            <th>Статус</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var stock in Model)
+        {
+            <tr>
+                <td>@stock.Medicine.Name</td>
+                <td>@stock.Medicine.Category?.Name</td>
+                <td>@stock.Quantity @stock.Unit</td>
+                <td>@stock.MinQuantity @stock.Unit</td>
+                <td>@stock.StoragePlace</td>
+                <td>
+                    <span class="badge bg-danger">Нужно пополнить</span>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

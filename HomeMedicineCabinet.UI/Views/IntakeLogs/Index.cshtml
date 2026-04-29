@@ -1,0 +1,82 @@
+﻿@model IEnumerable<HomeMedicineCabinet.Core.Entities.IntakeLog>
+
+@{
+    ViewData["Title"] = "Журнал приёма";
+}
+
+<h1>Журнал приёма на сегодня</h1>
+
+<a class="btn btn-secondary mb-3" asp-controller="Medicines" asp-action="Index">
+    Назад к аптечке
+</a>
+
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>Время</th>
+            <th>Лекарство</th>
+            <th>Доза</th>
+            <th>Статус</th>
+            <th>Действия</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var log in Model)
+        {
+            <tr>
+                <td>@log.PlannedDateTime.ToString("HH:mm")</td>
+                <td>@log.IntakeSchedule.Medicine.Name</td>
+                <td>@log.IntakeSchedule.Dose</td>
+                <td>
+                    @if (log.Status == "Planned")
+                    {
+                        <span class="badge bg-primary">Запланировано</span>
+                    }
+                    else if (log.Status == "Taken")
+                    {
+                        <span class="badge bg-success">Принято</span>
+                    }
+                    else if (log.Status == "Skipped")
+                    {
+                        <span class="badge bg-warning text-dark">Пропущено</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary">@log.Status</span>
+                    }
+                </td>
+                <td>
+                    <form asp-action="ChangeStatus"
+                          asp-route-id="@log.Id"
+                          method="post"
+                          style="display:inline;">
+                        <input type="hidden" name="status" value="Taken" />
+                        <button type="submit" class="btn btn-sm btn-success">
+                            Принято
+                        </button>
+                    </form>
+
+                    <form asp-action="ChangeStatus"
+                          asp-route-id="@log.Id"
+                          method="post"
+                          style="display:inline;">
+                        <input type="hidden" name="status" value="Skipped" />
+                        <button type="submit" class="btn btn-sm btn-warning">
+                            Пропущено
+                        </button>
+                    </form>
+
+                    <form asp-action="ChangeStatus"
+                          asp-route-id="@log.Id"
+                          method="post"
+                          style="display:inline;">
+                        <input type="hidden" name="status" value="Planned" />
+                        <button type="submit" class="btn btn-sm btn-secondary">
+                            Сбросить
+                        </button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
