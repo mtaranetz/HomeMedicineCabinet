@@ -13,8 +13,18 @@ public class SignalRNotificationSender : INotificationSender
         _hub = hub;
     }
 
-    public async Task SendAsync(string title, string message)
+    public async Task SendAsync(
+    string title,
+    string message,
+    int notificationId,
+    int? intakeLogId = null)
     {
-        await _hub.Clients.All.SendAsync("ReceiveNotification", title, message);
+        await _hub.Clients.All.SendAsync(
+            "ReceiveNotification",
+            title,
+            message,
+            notificationId,
+            intakeLogId
+        );
     }
 }

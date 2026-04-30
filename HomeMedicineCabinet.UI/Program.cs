@@ -5,6 +5,12 @@ using HomeMedicineCabinet.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using HomeMedicineCabinet.Infrastructure.Services;
 
+using WebPush;
+
+var keys = VapidHelper.GenerateVapidKeys();
+
+Console.WriteLine(keys.PublicKey);
+Console.WriteLine(keys.PrivateKey);
 
 var builder = WebApplication.CreateBuilder(args);
 

@@ -3,7 +3,6 @@ using HomeMedicineCabinet.Infrastructure.Data;
 using HomeMedicineCabinet.Infrastructure.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using HomeMedicineCabinet.Infrastructure.Services;
 
 namespace HomeMedicineCabinet.UI.Controllers;
 
@@ -105,6 +104,34 @@ public class IntakeLogsController : Controller
         await _context.SaveChangesAsync();
 
         return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> SetStatusFromNotification(int id, string status)
+    {
+        if (status != "Taken" && status != "Skipped")
+        {
+            return BadRequest();
+        }
+
+        var log = await _context.IntakeLogs.FindAsync(id);
+
+        if (log == null)
+        {
+            return NotFound();
+        }
+
+        if (log.Status != "Planned")
+        {
+            return Ok();
+        }
+
+        log.Status = status;
+        log.ActualDateTime = DateTime.Now;
+
+        await _context.SaveChangesAsync();
+
+        return Ok();
     }
 
     private async Task GenerateTodayLogs()

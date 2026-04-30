@@ -25,5 +25,8 @@
         public User User { get; set; } = null!;
 
         public Medicine? Medicine { get; set; }
+
+        public int? IntakeLogId { get; set; }
+        public IntakeLog? IntakeLog { get; set; }
     }
 }

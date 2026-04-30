@@ -1,6 +1,5 @@
 ﻿using HomeMedicineCabinet.Core.Entities;
 using Microsoft.EntityFrameworkCore;
-
 namespace HomeMedicineCabinet.Infrastructure.Data;
 
 public class ApplicationDbContext : DbContext
@@ -18,6 +17,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<IntakeTime> IntakeTimes => Set<IntakeTime>();
     public DbSet<IntakeLog> IntakeLogs => Set<IntakeLog>();
     public DbSet<Notification> Notifications => Set<Notification>();
+    public DbSet<PushSubscription> PushSubscriptions { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -31,6 +31,7 @@ public class ApplicationDbContext : DbContext
         ConfigureIntakeTimes(modelBuilder);
         ConfigureIntakeLogs(modelBuilder);
         ConfigureNotifications(modelBuilder);
+        ConfigurePushSubscriptions(modelBuilder);
     }
 
     private static void ConfigureUsers(ModelBuilder modelBuilder)
@@ -393,6 +394,51 @@ public class ApplicationDbContext : DbContext
                 .WithMany(e => e.Notifications)
                 .HasForeignKey(e => e.MedicineId)
                 .OnDelete(DeleteBehavior.SetNull);
+
+            entity.Property(e => e.IntakeLogId)
+                .HasColumnName("intake_log_id");
+
+            entity.HasOne(e => e.IntakeLog)
+                .WithMany()
+                .HasForeignKey(e => e.IntakeLogId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasIndex(e => e.IntakeLogId)
+                .IsUnique();
+        });
+    }
+
+    private static void ConfigurePushSubscriptions(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<PushSubscription>(entity =>
+        {
+            entity.ToTable("push_subscriptions");
+
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Id)
+                .HasColumnName("id");
+
+            entity.Property(e => e.Endpoint)
+                .HasColumnName("endpoint")
+                .IsRequired();
+
+            entity.Property(e => e.P256dh)
+                .HasColumnName("p256dh")
+                .IsRequired();
+
+            entity.Property(e => e.Auth)
+                .HasColumnName("auth")
+                .IsRequired();
+
+            entity.Property(e => e.UserAgent)
+                .HasColumnName("user_agent");
+
+            entity.Property(e => e.CreatedAt)
+                .HasColumnName("created_at");
+
+            entity.HasIndex(e => e.Endpoint)
+                .IsUnique();
         });
     }
 }

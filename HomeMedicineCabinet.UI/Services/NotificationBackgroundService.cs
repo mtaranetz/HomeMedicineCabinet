@@ -1,28 +1,28 @@
-﻿using HomeMedicineCabinet.Infrastructure.Services;
+﻿    using HomeMedicineCabinet.Infrastructure.Services;
 
-namespace HomeMedicineCabinet.UI.Services;
+    namespace HomeMedicineCabinet.UI.Services;
 
-public class NotificationBackgroundService : BackgroundService
-{
-    private readonly IServiceScopeFactory _scopeFactory;
-
-    public NotificationBackgroundService(IServiceScopeFactory scopeFactory)
+    public class NotificationBackgroundService : BackgroundService
     {
-        _scopeFactory = scopeFactory;
-    }
+        private readonly IServiceScopeFactory _scopeFactory;
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-    {
-        while (!stoppingToken.IsCancellationRequested)
+        public NotificationBackgroundService(IServiceScopeFactory scopeFactory)
         {
-            using var scope = _scopeFactory.CreateScope();
+            _scopeFactory = scopeFactory;
+        }
 
-            var notificationService = scope.ServiceProvider
-                .GetRequiredService<NotificationService>();
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+        {
+            while (!stoppingToken.IsCancellationRequested)
+            {
+                using var scope = _scopeFactory.CreateScope();
 
-            await notificationService.CheckIntakeReminders();
+                var notificationService = scope.ServiceProvider
+                    .GetRequiredService<NotificationService>();
 
-            await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
+                await notificationService.CheckIntakeReminders();
+
+                await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
+            }
         }
     }
-}
