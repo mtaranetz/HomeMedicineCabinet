@@ -7,15 +7,19 @@ public class MedicineStockCreateViewModel
     public int MedicineId { get; set; }
 
     [Required]
-    public int Quantity { get; set; }
+    public decimal Quantity { get; set; }
 
-    [Required]
-    public string Unit { get; set; } = string.Empty;
+    //[Required]
+    //public string Unit { get; set; } = string.Empty;
 
-    public int MinQuantity { get; set; }
+    public decimal MinQuantity { get; set; }
 
     [Required]
     public DateTime ExpirationDate { get; set; }
 
     public string? StoragePlace { get; set; }
+
+    public bool IsPackage { get; set; }
+
+    public int? ItemsPerPackage { get; set; }
 }

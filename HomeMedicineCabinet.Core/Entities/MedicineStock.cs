@@ -6,11 +6,11 @@
 
         public int MedicineId { get; set; }
 
-        public int Quantity { get; set; }
+        public decimal Quantity { get; set; }
 
         public string Unit { get; set; } = string.Empty;
 
-        public int MinQuantity { get; set; }
+        public decimal MinQuantity { get; set; }
 
         public DateTime ExpirationDate { get; set; }
 

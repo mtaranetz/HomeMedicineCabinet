@@ -2,9 +2,14 @@
 using HomeMedicineCabinet.Infrastructure.Data;
 using HomeMedicineCabinet.UI.Models;
 using Microsoft.AspNetCore.Mvc;
-
+using Microsoft.EntityFrameworkCore;
 namespace HomeMedicineCabinet.UI.Controllers;
 
+using System.Security.Claims;
+
+using Microsoft.AspNetCore.Authorization;
+
+[Authorize]
 public class MedicineStocksController : Controller
 {
     private readonly ApplicationDbContext _context;
@@ -17,7 +22,10 @@ public class MedicineStocksController : Controller
     [HttpGet]
     public async Task<IActionResult> Create(int medicineId)
     {
-        var medicine = await _context.Medicines.FindAsync(medicineId);
+        var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+        var medicine = await _context.Medicines
+            .FirstOrDefaultAsync(m => m.Id == medicineId && m.UserId == userId);
 
         if (medicine == null)
         {
@@ -25,6 +33,7 @@ public class MedicineStocksController : Controller
         }
 
         ViewBag.MedicineName = medicine.Name;
+        ViewBag.BaseUnit = medicine.BaseUnit;
 
         return View(new MedicineStockCreateViewModel
         {
@@ -37,18 +46,46 @@ public class MedicineStocksController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(MedicineStockCreateViewModel model)
     {
+        var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
         if (!ModelState.IsValid)
         {
-            var medicine = await _context.Medicines.FindAsync(model.MedicineId);
+            var medicine = await _context.Medicines
+                .FirstOrDefaultAsync(m => m.Id == model.MedicineId && m.UserId == userId);
+
             ViewBag.MedicineName = medicine?.Name;
+            ViewBag.BaseUnit = medicine?.BaseUnit;
             return View(model);
+        }
+
+        var medicineCheck = await _context.Medicines
+            .FirstOrDefaultAsync(m => m.Id == model.MedicineId && m.UserId == userId);
+
+        if (medicineCheck == null)
+        {
+            return NotFound();
+        }
+
+        var quantity = model.Quantity;
+
+        if (model.IsPackage)
+        {
+            if (model.ItemsPerPackage == null || model.ItemsPerPackage <= 0)
+            {
+                ModelState.AddModelError(nameof(model.ItemsPerPackage), "Укажите количество единиц в упаковке");
+                ViewBag.MedicineName = medicineCheck.Name;
+                ViewBag.BaseUnit = medicineCheck.BaseUnit;
+                return View(model);
+            }
+
+            quantity = model.Quantity * model.ItemsPerPackage.Value;
         }
 
         var stock = new MedicineStock
         {
             MedicineId = model.MedicineId,
-            Quantity = model.Quantity,
-            Unit = model.Unit,
+            Quantity = quantity,
+            Unit = medicineCheck.BaseUnit,
             MinQuantity = model.MinQuantity,
             ExpirationDate = model.ExpirationDate,
             StoragePlace = model.StoragePlace,
@@ -56,6 +93,7 @@ public class MedicineStocksController : Controller
         };
 
         _context.MedicineStocks.Add(stock);
+
         await _context.SaveChangesAsync();
 
         return RedirectToAction("Index", "Medicines");

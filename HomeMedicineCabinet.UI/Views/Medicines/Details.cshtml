@@ -1,0 +1,230 @@
+﻿@using HomeMedicineCabinet.UI.Helpers
+@model HomeMedicineCabinet.Core.Entities.Medicine
+
+@{
+    ViewData["Title"] = Model.Name;
+    var today = DateTime.Today;
+}
+
+<div class="d-flex justify-content-between align-items-start mb-4">
+    <div>
+        <h1 class="mb-1">@Model.Name</h1>
+        <div class="text-muted">
+            @Model.Category?.Name
+        </div>
+    </div>
+
+    <div class="d-flex gap-2">
+        <a class="btn btn-outline-primary"
+               asp-controller="MedicineStocks"
+               asp-action="Create"
+               asp-route-medicineId="@Model.Id">
+            Пополнить запас
+        </a>
+
+        <a class="btn btn-outline-secondary"
+               asp-controller="Medicines"
+               asp-action="Edit"
+               asp-route-id="@Model.Id">
+            Редактировать
+        </a>
+
+        <a class="btn btn-secondary"
+               asp-controller="Medicines"
+               asp-action="Index">
+            Назад
+        </a>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-6">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-body">
+                <h5 class="card-title">Информация о лекарстве</h5>
+
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">Название</dt>
+                    <dd class="col-sm-8">@Model.Name</dd>
+
+                    <dt class="col-sm-4">Категория</dt>
+                    <dd class="col-sm-8">@Model.Category?.Name</dd>
+
+                    <dt class="col-sm-4">Форма</dt>
+                    <dd class="col-sm-8">@Model.Form</dd>
+
+                    <dt class="col-sm-4">Дозировка</dt>
+                    <dd class="col-sm-8">@Model.Dosage</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-body">
+                <h5 class="card-title">Сводка по запасам</h5>
+
+                @{
+                    var totalQuantity = Model.Stocks.Sum(s => s.Quantity);
+                    var lowStocks = Model.Stocks.Count(s => s.Quantity <= s.MinQuantity);
+                    var expiredStocks = Model.Stocks.Count(s => s.ExpirationDate.Date < today);
+                    var expiringSoon = Model.Stocks.Count(s =>
+                        s.ExpirationDate.Date >= today &&
+                        s.ExpirationDate.Date <= today.AddDays(7));
+                }
+
+                <div class="row text-center">
+                    <div class="col-6 mb-3">
+                        <div class="border rounded p-3">
+                            <div class="text-muted small">Всего запасов</div>
+                            <div class="fs-4 fw-bold">@totalQuantity</div>
+                        </div>
+                    </div>
+
+                    <div class="col-6 mb-3">
+                        <div class="border rounded p-3">
+                            <div class="text-muted small">Низкий остаток</div>
+                            <div class="fs-4 fw-bold">@lowStocks</div>
+                        </div>
+                    </div>
+
+                    <div class="col-6">
+                        <div class="border rounded p-3">
+                            <div class="text-muted small">Просрочены</div>
+                            <div class="fs-4 fw-bold">@expiredStocks</div>
+                        </div>
+                    </div>
+
+                    <div class="col-6">
+                        <div class="border rounded p-3">
+                            <div class="text-muted small">Скоро истекают</div>
+                            <div class="fs-4 fw-bold">@expiringSoon</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-body">
+        <h5 class="card-title mb-3">Запасы лекарства</h5>
+
+        @if (!Model.Stocks.Any())
+        {
+            <div class="alert alert-secondary mb-0">
+                Запасы для этого лекарства ещё не добавлены.
+            </div>
+        }
+        else
+        {
+            <table class="table table-bordered align-middle">
+                <thead>
+                    <tr>
+                        <th>Количество</th>
+                        <th>Минимум</th>
+                        <th>Срок годности</th>
+                        <th>Место хранения</th>
+                        <th>Обновлено</th>
+                        <th>Статус</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var stock in Model.Stocks.OrderBy(s => s.ExpirationDate))
+                    {
+                        var isExpired = stock.ExpirationDate.Date < today;
+                        var isExpiringSoon = stock.ExpirationDate.Date >= today &&
+                                             stock.ExpirationDate.Date <= today.AddDays(7);
+                        var isLow = stock.Quantity <= stock.MinQuantity;
+
+                        var status = "В норме";
+                        var badge = "bg-success";
+
+                        if (isExpired)
+                        {
+                            status = "Просрочено";
+                            badge = "bg-danger";
+                        }
+                        else if (isLow)
+                        {
+                            status = "Низкий остаток";
+                            badge = "bg-danger";
+                        }
+                        else if (isExpiringSoon)
+                        {
+                            status = "Скоро истекает";
+                            badge = "bg-warning text-dark";
+                        }
+
+                        <tr>
+                            <td>@QuantityFormatter.Format(stock.Quantity) @stock.Unit</td>
+                            <td>@QuantityFormatter.Format(stock.MinQuantity) @stock.Unit</td>
+                            <td>@stock.ExpirationDate.ToString("dd.MM.yyyy")</td>
+                            <td>@stock.StoragePlace</td>
+                            <td>@stock.UpdatedAt.ToString("dd.MM.yyyy HH:mm")</td>
+                            <td>
+                                <span class="badge @badge">@status</span>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-body">
+        <h5 class="card-title mb-3">Расписание приёма</h5>
+
+        @if (Model.IntakeSchedules == null || !Model.IntakeSchedules.Any())
+        {
+            <div class="alert alert-secondary mb-0">
+                Расписание приёма для этого лекарства не настроено.
+            </div>
+        }
+        else
+        {
+            <table class="table table-bordered align-middle">
+                <thead>
+                    <tr>
+                        <th>Доза</th>
+                        <th>Частота</th>
+                        <th>Период</th>
+                        <th>Время приёма</th>
+                        <th>Статус</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var schedule in Model.IntakeSchedules.OrderByDescending(s => s.CreatedAt))
+                    {
+                        <tr>
+                            <td>@schedule.Dose</td>
+                            <td>@schedule.FrequencyType</td>
+                            <td>
+                                @schedule.StartDate.ToString("dd.MM.yyyy")
+                                —
+                                @(schedule.EndDate?.ToString("dd.MM.yyyy") ?? "без окончания")
+                            </td>
+                            <td>
+                                @string.Join(", ", schedule.IntakeTimes.Select(t => t.IntakeTimeValue.ToString(@"hh\:mm")))
+                            </td>
+                            <td>
+                                @if (schedule.IsActive)
+                                {
+                                    <span class="badge bg-success">Активно</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">Отключено</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>

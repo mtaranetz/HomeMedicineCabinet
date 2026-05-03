@@ -1,4 +1,5 @@
-﻿@model IEnumerable<HomeMedicineCabinet.Core.Entities.MedicineStock>
+﻿@using HomeMedicineCabinet.UI.Helpers
+@model IEnumerable<HomeMedicineCabinet.Core.Entities.MedicineStock>
 
 @{
     ViewData["Title"] = "Низкие запасы";
@@ -25,8 +26,8 @@
             <tr>
                 <td>@stock.Medicine.Name</td>
                 <td>@stock.Medicine.Category?.Name</td>
-                <td>@stock.Quantity @stock.Unit</td>
-                <td>@stock.MinQuantity @stock.Unit</td>
+                <td>@QuantityFormatter.Format(stock.Quantity) @stock.Unit</td>
+                <td>@QuantityFormatter.Format(stock.MinQuantity) @stock.Unit</td>
                 <td>@stock.StoragePlace</td>
                 <td>
                     <span class="badge bg-danger">Нужно пополнить</span>

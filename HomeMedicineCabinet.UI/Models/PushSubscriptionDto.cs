@@ -13,3 +13,8 @@ public class PushKeysDto
 
     public string Auth { get; set; } = string.Empty;
 }
+
+public class UnsubscribePushDto
+{
+    public string Endpoint { get; set; } = string.Empty;
+}

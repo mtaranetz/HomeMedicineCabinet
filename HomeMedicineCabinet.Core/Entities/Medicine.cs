@@ -31,5 +31,7 @@
         public ICollection<IntakeSchedule> IntakeSchedules { get; set; } = new List<IntakeSchedule>();
 
         public ICollection<Notification> Notifications { get; set; } = new List<Notification>();
+
+        public string BaseUnit { get; set; } = "шт.";
     }
 }

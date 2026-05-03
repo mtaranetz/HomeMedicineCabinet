@@ -30,6 +30,18 @@
     </div>
 
     <div class="mb-3">
+        <label asp-for="BaseUnit" class="form-label">Базовая единица учёта</label>
+        <select asp-for="BaseUnit" class="form-select">
+            <option value="таблеток">таблеток</option>
+            <option value="капсул">капсул</option>
+            <option value="мл">мл</option>
+            <option value="г">г</option>
+            <option value="ампул">ампул</option>
+            <option value="шт.">шт.</option>
+        </select>
+    </div>
+
+    <div class="mb-3">
         <label class="form-label">Производитель</label>
         <input asp-for="Manufacturer" class="form-control" />
     </div>

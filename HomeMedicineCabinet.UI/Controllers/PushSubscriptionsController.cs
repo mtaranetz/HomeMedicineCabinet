@@ -1,11 +1,14 @@
 ﻿using HomeMedicineCabinet.Core.Entities;
 using HomeMedicineCabinet.Infrastructure.Data;
 using HomeMedicineCabinet.UI.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace HomeMedicineCabinet.UI.Controllers;
 
+[Authorize]
 public class PushSubscriptionsController : Controller
 {
     private readonly ApplicationDbContext _context;
@@ -33,18 +36,23 @@ public class PushSubscriptionsController : Controller
     [HttpPost]
     public async Task<IActionResult> Subscribe([FromBody] PushSubscriptionDto dto)
     {
+        var userId = GetCurrentUserId();
+
         if (string.IsNullOrWhiteSpace(dto.Endpoint))
         {
             return BadRequest();
         }
 
         var existingSubscription = await _context.PushSubscriptions
-            .FirstOrDefaultAsync(s => s.Endpoint == dto.Endpoint);
+            .FirstOrDefaultAsync(s =>
+                s.Endpoint == dto.Endpoint &&
+                s.UserId == userId);
 
         if (existingSubscription == null)
         {
             var subscription = new PushSubscription
             {
+                UserId = userId,
                 Endpoint = dto.Endpoint,
                 P256dh = dto.Keys.P256dh,
                 Auth = dto.Keys.Auth,
@@ -64,5 +72,34 @@ public class PushSubscriptionsController : Controller
         await _context.SaveChangesAsync();
 
         return Ok();
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Unsubscribe([FromBody] UnsubscribePushDto dto)
+    {
+        var userId = GetCurrentUserId();
+
+        if (string.IsNullOrWhiteSpace(dto.Endpoint))
+        {
+            return BadRequest();
+        }
+
+        var subscription = await _context.PushSubscriptions
+            .FirstOrDefaultAsync(s =>
+                s.Endpoint == dto.Endpoint &&
+                s.UserId == userId);
+
+        if (subscription != null)
+        {
+            _context.PushSubscriptions.Remove(subscription);
+            await _context.SaveChangesAsync();
+        }
+
+        return Ok();
+    }
+
+    private int GetCurrentUserId()
+    {
+        return int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
     }
 }

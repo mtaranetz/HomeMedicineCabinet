@@ -4,9 +4,13 @@ using HomeMedicineCabinet.UI.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
+
 
 namespace HomeMedicineCabinet.UI.Controllers;
 
+[Authorize]
 public class SchedulesController : Controller
 {
     private readonly ApplicationDbContext _context;
@@ -18,10 +22,12 @@ public class SchedulesController : Controller
 
     public async Task<IActionResult> Index()
     {
+        var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
         var schedules = await _context.IntakeSchedules
             .Include(s => s.Medicine)
             .Include(s => s.IntakeTimes)
             .OrderByDescending(s => s.CreatedAt)
+            .Where(s => s.UserId == userId)
             .ToListAsync();
 
         return View(schedules);
@@ -49,11 +55,11 @@ public class SchedulesController : Controller
             await LoadMedicines(model.MedicineId);
             return View(model);
         }
-
+        var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
         var schedule = new IntakeSchedule
         {
             MedicineId = model.MedicineId,
-            UserId = 1,
+            UserId = userId,
             Dose = model.Dose,
             FrequencyType = model.FrequencyType,
             TimesPerDay = model.TimesPerDay,
@@ -93,8 +99,13 @@ public class SchedulesController : Controller
 
     private async Task LoadMedicines(int? selectedMedicineId = null)
     {
+        var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
         ViewBag.Medicines = new SelectList(
-            await _context.Medicines.OrderBy(m => m.Name).ToListAsync(),
+            await _context.Medicines
+                .Where(m => m.UserId == userId)
+                .OrderBy(m => m.Name)
+                .ToListAsync(),
             "Id",
             "Name",
             selectedMedicineId

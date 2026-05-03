@@ -20,9 +20,8 @@
                 var notificationService = scope.ServiceProvider
                     .GetRequiredService<NotificationService>();
 
-                await notificationService.CheckIntakeReminders();
-
-                await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
+            await notificationService.CheckAllNotifications();
+            await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
             }
         }
     }

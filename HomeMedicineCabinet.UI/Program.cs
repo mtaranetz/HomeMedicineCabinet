@@ -4,6 +4,7 @@ using HomeMedicineCabinet.UI.Hubs;
 using HomeMedicineCabinet.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using HomeMedicineCabinet.Infrastructure.Services;
+using Microsoft.AspNetCore.Authentication.Cookies;
 
 using WebPush;
 
@@ -40,6 +41,17 @@ builder.Services.AddSignalR();
 builder.Services.AddScoped<NotificationService>();
 builder.Services.AddScoped<INotificationSender, SignalRNotificationSender>();
 builder.Services.AddHostedService<NotificationBackgroundService>();
+builder.Services.AddScoped<PushNotificationService>();
+builder.Services
+    .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/Account/Login";
+        options.LogoutPath = "/Account/Logout";
+        options.AccessDeniedPath = "/Account/Login";
+    });
+
+builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
@@ -55,13 +67,14 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapStaticAssets();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}")
+    pattern: "{controller=Medicines}/{action=Index}/{id?}")
     .WithStaticAssets();
 
 app.MapHub<NotificationHub>("/notificationHub");

@@ -2,106 +2,220 @@
 
 @{
     ViewData["Title"] = "Моя аптечка";
+    var today = DateTime.Today;
 }
 
-<h1>Моя аптечка</h1>
+@using HomeMedicineCabinet.UI.Helpers
 
-<a class="btn btn-primary mb-3" asp-controller="Medicines" asp-action="Create">
-    Добавить лекарство
-</a>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="mb-1">Моя аптечка</h1>
+        <p class="text-muted mb-0">Лекарства, запасы, сроки годности и расписание приёма</p>
+    </div>
 
-<a class="btn btn-warning mb-3"
-       asp-controller="Medicines"
-       asp-action="Expiration">
-    Проверить сроки годности
-</a>
+    <a class="btn btn-primary" asp-controller="Medicines" asp-action="Create">
+        + Добавить лекарство
+    </a>
+</div>
 
-<a class="btn btn-danger mb-3"
-       asp-controller="Medicines"
-       asp-action="LowStock">
-    Низкие запасы
-</a>
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <a class="text-decoration-none" asp-controller="Expiration" asp-action="Index">
+            <div class="card shadow-sm border-warning h-100">
+                <div class="card-body">
+                    <div class="fw-semibold text-dark">Сроки годности</div>
+                    <small class="text-muted">Проверить просроченные препараты</small>
+                </div>
+            </div>
+        </a>
+    </div>
 
-<a class="btn btn-info mb-3"
-       asp-controller="Schedules"
-       asp-action="Index">
-    Расписание приёма
-</a>
+    <div class="col-md-3">
+        <a class="text-decoration-none" asp-controller="Medicines" asp-action="LowStock">
+            <div class="card shadow-sm border-danger h-100">
+                <div class="card-body">
+                    <div class="fw-semibold text-dark">Низкие запасы</div>
+                    <small class="text-muted">Лекарства, которые заканчиваются</small>
+                </div>
+            </div>
+        </a>
+    </div>
 
-<a class="btn btn-success mb-3"
-       asp-controller="IntakeLogs"
-       asp-action="Index">
-    Журнал приёма
-</a>
+    <div class="col-md-3">
+        <a class="text-decoration-none" asp-controller="Schedules" asp-action="Index">
+            <div class="card shadow-sm border-info h-100">
+                <div class="card-body">
+                    <div class="fw-semibold text-dark">Расписание</div>
+                    <small class="text-muted">План приёма медикаментов</small>
+                </div>
+            </div>
+        </a>
+    </div>
 
-<table class="table table-bordered table-striped">
-    <thead>
-        <tr>
-            <th>Название</th>
-            <th>Категория</th>
-            <th>Форма</th>
-            <th>Дозировка</th>
-            <th>Запасы</th>
-            <th>Срок годности</th>
-            <th>Действия</th>
-        </tr>
-    </thead>
-    <tbody>
-    @foreach (var medicine in Model)
-    {
-        var firstStock = medicine.Stocks.FirstOrDefault();
+    <div class="col-md-3">
+        <a class="text-decoration-none" asp-controller="IntakeLogs" asp-action="Index">
+            <div class="card shadow-sm border-success h-100">
+                <div class="card-body">
+                    <div class="fw-semibold text-dark">Журнал приёма</div>
+                    <small class="text-muted">Принятые и пропущенные дозы</small>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
 
-        <tr>
-            <td>@medicine.Name</td>
-            <td>@medicine.Category?.Name</td>
-            <td>@medicine.Form</td>
-            <td>@medicine.Dosage</td>
-            <td>
-                @if (firstStock != null)
-                {
-                    @($"{firstStock.Quantity} {firstStock.Unit}")
-                }
-                else
-                {
-                    <span>Нет данных</span>
-                }
-            </td>
-            <td>
-                @if (firstStock != null)
-                {
-                    @firstStock.ExpirationDate.ToString("dd.MM.yyyy")
-                }
-                else
-                {
-                    <span>Нет данных</span>
-                }
-            </td>
-            <td>
-                <a class="btn btn-sm btn-outline-primary"
-                        asp-controller="MedicineStocks"
-                        asp-action="Create"
-                        asp-route-medicineId="@medicine.Id">
-                    Добавить запас
-                </a>
-            
-                <a class="btn btn-sm btn-outline-secondary"
-                        asp-controller="Medicines"
-                        asp-action="Edit"
-                        asp-route-id="@medicine.Id">
-                    Редактировать
-                </a>
+@if (!Model.Any())
+{
+    <div class="alert alert-info">
+        В аптечке пока нет лекарств. Добавьте первый препарат.
+    </div>
+}
+else
+{
+    <div class="row g-4">
+        @foreach (var medicine in Model)
+        {
+            var stocks = medicine.Stocks.ToList();
+            var hasStock = stocks.Any();
 
-                <form asp-controller="Medicines"
-                        asp-action="Delete"
-                        asp-route-id="@medicine.Id"
-                        method="post"
-                        style="display:inline;">
-                    <button type="submit" class="btn btn-sm btn-outline-danger">
-                        Удалить
-                    </button>
-                </form>
-            </td>
-        </tr>
-    }
-    </tbody>
-</table>
+            var totalQuantity = stocks.Sum(s => s.Quantity);
+            var nearestStock = stocks.OrderBy(s => s.ExpirationDate).FirstOrDefault();
+
+            var isExpired = stocks.Any(s => s.ExpirationDate.Date < today);
+            var isExpiringSoon = stocks.Any(s =>
+                s.ExpirationDate.Date >= today &&
+                s.ExpirationDate.Date <= today.AddDays(7));
+
+            var isLowStock = stocks.Any(s => s.Quantity <= s.MinQuantity);
+
+            @* var isExpired = hasStock && stock!.ExpirationDate.Date < today;
+            var isExpiringSoon = hasStock && stock!.ExpirationDate.Date >= today && stock.ExpirationDate.Date <= today.AddDays(7);
+            var isLowStock = hasStock && stock!.Quantity <= stock.MinQuantity; *@
+
+            var statusClass = "bg-success";
+            var statusText = "В норме";
+
+            if (!hasStock)
+            {
+                statusClass = "bg-secondary";
+                statusText = "Нет запасов";
+            }
+            else if (isExpired)
+            {
+                statusClass = "bg-danger";
+                statusText = "Просрочено";
+            }
+            else if (isLowStock)
+            {
+                statusClass = "bg-danger";
+                statusText = "Низкий остаток";
+            }
+            else if (isExpiringSoon)
+            {
+                statusClass = "bg-warning text-dark";
+                statusText = "Скоро истечёт";
+            }
+
+            <div class="col-md-6 col-xl-4">
+                <div class="card h-100 shadow-sm border-0">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <h5 class="card-title mb-1">@medicine.Name</h5>
+                                <div class="text-muted small">
+                                    @medicine.Category?.Name
+                                </div>
+                            </div>
+
+                            <span class="badge @statusClass">
+                                @statusText
+                            </span>
+                        </div>
+
+                        <div class="mb-3">
+                            <div><strong>Форма:</strong> @medicine.Form</div>
+                            <div><strong>Дозировка:</strong> @medicine.Dosage</div>
+                        </div>
+
+                        @if (hasStock)
+                        {
+                            <div class="border rounded p-3 bg-light mb-3">
+                                <div class="d-flex justify-content-between">
+                                    <span>Общий остаток</span>
+                                    <strong>@QuantityFormatter.Format(totalQuantity) @medicine.BaseUnit</strong>
+                                </div>
+
+                                <div class="d-flex justify-content-between">
+                                    <span>Ближайший срок</span>
+                                    <strong>@nearestStock!.ExpirationDate.ToString("dd.MM.yyyy")</strong>
+                                </div>
+
+                                @if (!string.IsNullOrWhiteSpace(nearestStock.StoragePlace))
+                                {
+                                    <div class="d-flex justify-content-between">
+                                        <span>Ближайшая партия</span>
+                                        <strong>@nearestStock.StoragePlace</strong>
+                                    </div>
+                                }
+
+                                <div class="d-flex justify-content-between">
+                                    <span>Партий</span>
+                                    <strong>@stocks.Count</strong>
+                                </div>
+
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="alert alert-secondary py-2 mb-3">
+                                Запасы не добавлены.
+                            </div>
+                        }
+                        <div class="d-flex gap-2">
+
+                            <a class="btn btn-sm btn-outline-dark"
+                                   asp-controller="Medicines"
+                                   asp-action="Details"
+                                   asp-route-id="@medicine.Id"
+                                   title="Подробнее">
+                                <i class="bi bi-eye"></i>
+                            </a>
+
+                            <a class="btn btn-sm btn-outline-primary"
+                                   asp-controller="MedicineStocks"
+                                   asp-action="Create"
+                                   asp-route-medicineId="@medicine.Id"
+                                   title="Пополнить запас">
+                                <i class="bi bi-plus-circle"></i>
+                            </a>
+
+                            <a class="btn btn-sm btn-outline-secondary"
+                                   asp-controller="Medicines"
+                                   asp-action="Edit"
+                                   asp-route-id="@medicine.Id"
+                                   title="Редактировать">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+
+                            <form asp-controller="Medicines"
+                                  asp-action="Delete"
+                                  asp-route-id="@medicine.Id"
+                                  method="post"
+                                  onsubmit="return confirm('Удалить лекарство?');"
+                                  class="d-inline">
+
+                                <button type="submit"
+                                        class="btn btn-sm btn-outline-danger"
+                                        title="Удалить">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+
+                            </form>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}

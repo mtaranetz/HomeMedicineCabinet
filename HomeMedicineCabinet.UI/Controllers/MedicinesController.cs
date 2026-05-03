@@ -4,9 +4,13 @@ using Microsoft.EntityFrameworkCore;
 using HomeMedicineCabinet.Core.Entities;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using HomeMedicineCabinet.UI.Models;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
+
 
 namespace HomeMedicineCabinet.UI.Controllers;
 
+[Authorize]
 public class MedicinesController : Controller
 {
     private readonly ApplicationDbContext _context;
@@ -18,28 +22,31 @@ public class MedicinesController : Controller
 
     public async Task<IActionResult> Index()
     {
+        var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+
         var medicines = await _context.Medicines
             .Include(m => m.Category)
             .Include(m => m.Stocks)
+            .Where(m => m.UserId == userId)
             .ToListAsync();
 
         return View(medicines);
     }
 
-    public async Task<IActionResult> Expiration()
-    {
-        var today = DateTime.Today;
-        var warningDate = today.AddDays(30);
+    //public async Task<IActionResult> Expiration()
+    //{
+    //    var today = DateTime.Today;
+    //    var warningDate = today.AddDays(30);
 
-        var stocks = await _context.MedicineStocks
-            .Include(s => s.Medicine)
-            .ThenInclude(m => m.Category)
-            .Where(s => s.ExpirationDate <= warningDate)
-            .OrderBy(s => s.ExpirationDate)
-            .ToListAsync();
+    //    var stocks = await _context.MedicineStocks
+    //        .Include(s => s.Medicine)
+    //        .ThenInclude(m => m.Category)
+    //        .Where(s => s.ExpirationDate <= warningDate)
+    //        .OrderBy(s => s.ExpirationDate)
+    //        .ToListAsync();
 
-        return View(stocks);
-    }
+    //    return View(stocks);
+    //}
 
     public async Task<IActionResult> LowStock()
     {
@@ -51,6 +58,25 @@ public class MedicinesController : Controller
             .ToListAsync();
 
         return View(stocks);
+    }
+
+    public async Task<IActionResult> Details(int id)
+    {
+        var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+        var medicine = await _context.Medicines
+            .Include(m => m.Category)
+            .Include(m => m.Stocks)
+            .Include(m => m.IntakeSchedules)
+            .ThenInclude(s => s.IntakeTimes)
+            .FirstOrDefaultAsync(m => m.Id == id && m.UserId == userId);
+
+        if (medicine == null)
+        {
+            return NotFound();
+        }
+
+        return View(medicine);
     }
 
     [HttpGet]
@@ -90,7 +116,8 @@ public class MedicinesController : Controller
             Dosage = model.Dosage,
             Manufacturer = model.Manufacturer,
             Description = model.Description,
-            CreatedAt = DateTime.Now
+            CreatedAt = DateTime.Now,
+            BaseUnit = model.BaseUnit
         };
 
         _context.Medicines.Add(medicine);
@@ -123,7 +150,9 @@ public class MedicinesController : Controller
             Form = medicine.Form,
             Dosage = medicine.Dosage,
             Manufacturer = medicine.Manufacturer,
-            Description = medicine.Description
+            Description = medicine.Description,
+            BaseUnit = medicine.BaseUnit,
+
         };
 
         ViewBag.MedicineId = medicine.Id;
@@ -162,6 +191,7 @@ public class MedicinesController : Controller
         medicine.Manufacturer = model.Manufacturer;
         medicine.Description = model.Description;
         medicine.UpdatedAt = DateTime.Now;
+        medicine.BaseUnit = model.BaseUnit;
 
         await _context.SaveChangesAsync();
 

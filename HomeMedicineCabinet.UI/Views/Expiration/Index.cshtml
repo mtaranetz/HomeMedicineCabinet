@@ -1,0 +1,114 @@
+﻿@using HomeMedicineCabinet.UI.Helpers
+@model IEnumerable<HomeMedicineCabinet.Core.Entities.MedicineStock>
+
+@{
+    ViewData["Title"] = "Контроль сроков годности";
+    var today = DateTime.Today;
+    var warningDate = today.AddDays(7);
+}
+
+<h1 class="mb-4">Контроль сроков годности</h1>
+
+<a asp-controller="Medicines" asp-action="Index" class="btn btn-secondary mb-3">
+    Назад к аптечке
+</a>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card border-danger">
+            <div class="card-body">
+                <h6>Просрочены</h6>
+                <h3>@Model.Count(s => s.ExpirationDate.Date < today)</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card border-warning">
+            <div class="card-body">
+                <h6>Истекают сегодня</h6>
+                <h3>@Model.Count(s => s.ExpirationDate.Date == today)</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card border-warning">
+            <div class="card-body">
+                <h6>В ближайшие 7 дней</h6>
+                <h3>@Model.Count(s => s.ExpirationDate.Date > today && s.ExpirationDate.Date <= warningDate)</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card border-success">
+            <div class="card-body">
+                <h6>В норме</h6>
+                <h3>@Model.Count(s => s.ExpirationDate.Date > warningDate)</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<table class="table table-bordered table-striped align-middle">
+    <thead>
+        <tr>
+            <th>Лекарство</th>
+            <th>Категория</th>
+            <th>Количество</th>
+            <th>Срок годности</th>
+            <th>Статус</th>
+            <th>Место хранения</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var stock in Model.OrderBy(s => s.ExpirationDate))
+        {
+            var expirationDate = stock.ExpirationDate.Date;
+            var daysLeft = (expirationDate - today).Days;
+
+            string rowClass;
+            string statusText;
+            string badgeClass;
+
+            if (expirationDate < today)
+            {
+                rowClass = "table-danger";
+                statusText = $"Просрочено на {Math.Abs(daysLeft)} дн.";
+                badgeClass = "bg-danger";
+            }
+            else if (expirationDate == today)
+            {
+                rowClass = "table-warning";
+                statusText = "Истекает сегодня";
+                badgeClass = "bg-warning text-dark";
+            }
+            else if (expirationDate <= warningDate)
+            {
+                rowClass = "table-warning";
+                statusText = $"Осталось {daysLeft} дн.";
+                badgeClass = "bg-warning text-dark";
+            }
+            else
+            {
+                rowClass = "";
+                statusText = "Годен";
+                badgeClass = "bg-success";
+            }
+
+            <tr class="@rowClass">
+                <td>@stock.Medicine.Name</td>
+                <td>@stock.Medicine.Category?.Name</td>
+                <td>@QuantityFormatter.Format(stock.Quantity) @stock.Unit</td>
+                <td>@stock.ExpirationDate.ToString("dd.MM.yyyy")</td>
+                <td>
+                    <span class="badge @badgeClass">
+                        @statusText
+                    </span>
+                </td>
+                <td>@stock.StoragePlace</td>
+            </tr>
+        }
+    </tbody>
+</table>

@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
-namespace HomeMedicineCabinet.UI.Views.Medicines
+namespace HomeMedicineCabinet.UI.Views.Account
 {
-    public class ExpirationModel : PageModel
+    public class LoginModel : PageModel
     {
         public void OnGet()
         {

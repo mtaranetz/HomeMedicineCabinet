@@ -151,6 +151,11 @@ public class ApplicationDbContext : DbContext
                 .WithMany(e => e.Medicines)
                 .HasForeignKey(e => e.CategoryId)
                 .OnDelete(DeleteBehavior.SetNull);
+
+            entity.Property(e => e.BaseUnit)
+                .HasColumnName("base_unit")
+                .HasMaxLength(50)
+                .IsRequired();  
         });
     }
 
@@ -172,6 +177,7 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.Quantity)
                 .HasColumnName("quantity")
                 .HasDefaultValue(0)
+                .HasPrecision(10, 2)
                 .IsRequired();
 
             entity.Property(e => e.Unit)
@@ -182,6 +188,7 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.MinQuantity)
                 .HasColumnName("min_quantity")
                 .HasDefaultValue(0)
+                .HasPrecision(10, 2)
                 .IsRequired();
 
             entity.Property(e => e.ExpirationDate)
@@ -439,6 +446,14 @@ public class ApplicationDbContext : DbContext
 
             entity.HasIndex(e => e.Endpoint)
                 .IsUnique();
+
+            entity.Property(e => e.UserId)
+                .HasColumnName("user_id");
+
+            entity.HasOne(e => e.User)
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }
