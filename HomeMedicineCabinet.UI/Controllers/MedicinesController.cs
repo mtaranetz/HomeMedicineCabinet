@@ -106,10 +106,10 @@ public class MedicinesController : Controller
 
             return View(model);
         }
-
+        var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
         var medicine = new Medicine
         {
-            UserId = 1,
+            UserId = userId,
             CategoryId = model.CategoryId,
             Name = model.Name,
             Form = model.Form,
