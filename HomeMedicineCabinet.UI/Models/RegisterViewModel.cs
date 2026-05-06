@@ -5,7 +5,7 @@ namespace HomeMedicineCabinet.UI.Models;
 public class RegisterViewModel
 {
     [Required]
-    [Display(Name = "ФИО")]
+    [Display(Name = "Имя")]
     public string FullName { get; set; } = string.Empty;
 
     [Required]
